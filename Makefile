@@ -12,7 +12,7 @@ shell:
 	docker compose exec app bash
 
 mysql:
-	docker compose exec db sh -c "PGPASSWORD=password password -U user"
+	docker compose exec db mysql statech
 
 build:
 	docker compose up -d --build
@@ -23,4 +23,5 @@ down:
 restart: down up
 
 migrate:
+	docker compose exec app poetry add sqlalchemy pymysql
 	docker compose exec app poetry run python -m api.migrate_db
