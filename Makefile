@@ -3,6 +3,7 @@ setup-poetry:
 
 setup:
 	docker compose run --entrypoint "poetry install --no-root" app
+	@make up
 
 up:
 	docker compose up -d
@@ -20,3 +21,6 @@ down:
 	docker compose down
 
 restart: down up
+
+migrate:
+	docker compose exec app poetry run python -m api.migrate_db
