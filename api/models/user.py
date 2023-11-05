@@ -9,4 +9,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255))
     email = Column(String(255))
-    user_answer = relationship("UserAnswer", backref="users")
+    user_answer = relationship("UserAnswer", backref="users", cascade="delete")

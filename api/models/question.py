@@ -9,5 +9,5 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String(255))
     correct_answer = Column(String(255))
-    choice = relationship("Choice", backref="questions")
-    user_answer = relationship("UserAnswer", backref="questions")
+    choice = relationship("Choice", backref="questions", cascade="delete")
+    user_answer = relationship("UserAnswer", backref="questions", cascade="delete")

@@ -8,4 +8,4 @@ class Choice(Base):
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String(255))
     question_id = Column(Integer, ForeignKey("questions.id"))
-    user_answer = relationship("UserAnswer", backref="choices")
+    user_answer = relationship("UserAnswer", backref="choices", cascade="delete")
