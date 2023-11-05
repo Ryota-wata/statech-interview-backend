@@ -3,6 +3,7 @@ FROM python:3.11-buster
 
 # pythonの出力表示をDocker用に調整
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /src
 

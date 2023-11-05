@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from api.routers import test
 
 app = FastAPI()
 
@@ -10,3 +11,6 @@ app.add_middleware(
     allow_methods=["*"],  # すべてのHTTPメソッドを許可します。安全な設定に合わせて制限を追加してください。
     allow_headers=["*"],  # すべてのヘッダーを許可します。必要に応じて制限を設定してください。
 )
+
+router = APIRouter()
+app.include_router(test.router)
