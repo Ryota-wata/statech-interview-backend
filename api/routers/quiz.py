@@ -15,12 +15,15 @@ router = APIRouter()
 @router.get("/question/{question_id}", response_model=QuestionResponseModel)
 async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
     """質問を取得するエンドポイント
-      Request:
+
+      【Request】
         question_id: 質問ID
-      Response:
-        quesiton_id: 質問ID
-        text: 質問文
+      
+      【Response】
+        quesiton_id: 質問ID,
+        text: 質問文,
         correct_answer: 正解
+
     """
 
     stmt = select(QuestionOrm).where(QuestionOrm.id == question_id)
@@ -32,12 +35,14 @@ async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
 @router.get("/questions/{question_id}/choices", response_model=list[ChoiceResponseModel])
 async def get_choices(question_id: int, db: AsyncSession = Depends(get_db)):
     """質問の選択肢を取得するエンドポイント
-      Request:
+
+      【Request】
         question_id: 質問ID
-      Response:
-        choice_id: 選択肢ID
-        question_id: 質問ID
-        text: 選択肢文
+
+      【Response】
+        choice_id: 選択肢ID,
+        question_id: 質問ID,
+        text: 選択肢
 
     """
     stmt = select(ChoiceOrm).where(ChoiceOrm.question_id == question_id)
@@ -49,11 +54,12 @@ async def get_choices(question_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/questions/{question_id}/answers")
 async def answer_question(answer: UserAnswerRequestModel, db: AsyncSession = Depends(get_db)):
     """質問を回答するエンドポイント
-      Request:
-        id: ユーザ回答ID
-        user_id: ユーザID
-        question_id: 質問ID
+
+      【Request】
+        user_id: ユーザID,
+        question_id: 質問ID,
         choice_id: 選択肢ID
+
     """
 
     # ユーザーが特定の質問に対して既に回答した回数を取得
