@@ -22,6 +22,6 @@ down:
 
 restart: down up
 
-migrate:
+create:
 	docker compose exec app poetry add sqlalchemy pymysql
 	docker compose exec app poetry run python -m api.migrate_db

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from api.routers import test
+from api.routers import quiz
 
 app = FastAPI()
 
@@ -13,4 +13,4 @@ app.add_middleware(
 )
 
 router = APIRouter()
-app.include_router(test.router)
+app.include_router(quiz.router)

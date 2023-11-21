@@ -3,11 +3,11 @@ from sqlalchemy.orm import relationship
 from api.db import Base
 
 
-class Question(Base):
+class QuestionOrm(Base):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String(255))
     correct_answer = Column(String(255))
-    choice = relationship("Choice", backref="questions", cascade="delete")
-    user_answer = relationship("UserAnswer", backref="questions", cascade="delete")
+    choice = relationship("ChoiceOrm", backref="questions", cascade="delete")
+    user_answer = relationship("UserAnswerOrm", backref="questions", cascade="delete")
