@@ -13,8 +13,8 @@ router = APIRouter()
 @router.post("/login", response_model=UserResponseModel)
 async def login_user(request: Request, db: AsyncSession = Depends(get_db)):
     """ログインするエンドポイント
-      
-      【Response】
+    
+    【Response】
         id: ユーザーid
         name: ユーザー名
         email: メールアドレス
@@ -26,13 +26,14 @@ async def login_user(request: Request, db: AsyncSession = Depends(get_db)):
     # Firebase Admin SDKによりIDトークンを確認
     authorization = request.headers.get("Authorization")
     if authorization is None:
+        logging.error(f"認証トークンが存在しません: {e}")
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     token = authorization.split(" ")[-1].strip()
     try:
         claims = auth.verify_id_token(token)
     except Exception as e:
-        logging.info(f"token verification failed: {e}")
+        logging.error(f"不正な認証トークンです: {e}")
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     email = claims["email"]
