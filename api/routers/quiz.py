@@ -20,7 +20,7 @@ async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
         question_id: 質問ID
       
       【Response】
-        quesiton_id: 質問ID,
+        question_id: 質問ID,
         text: 質問文,
         correct_answer: 正解
 
@@ -61,12 +61,10 @@ async def answer_question(answer: UserAnswerRequestModel, db: AsyncSession = Dep
         choice_id: 選択肢ID
 
     """
-
     # ユーザーが特定の質問に対して既に回答した回数を取得
     stmt = select(UserAnswerOrm).where(UserAnswerOrm.user_id == answer.user_id, UserAnswerOrm.question_id == answer.question_id)
     result = await db.execute(stmt)
     last_took_exam_num = result.scalars().all()
-
 
     user_answer = UserAnswerOrm(
         user_id=answer.user_id,

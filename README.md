@@ -26,6 +26,11 @@ $ make up
 $ make down
 ```
 
+### テーブル作成（最初の1回のみ）
+```shell
+$ make create
+```
+
 ### 1からコンテナ立ち上げ
 ```shell
 $ make build
