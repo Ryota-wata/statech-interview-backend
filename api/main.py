@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from api.routers.admin import quiz_crud
 from api.routers import quiz, user
 
 app = FastAPI()
@@ -14,4 +15,5 @@ app.add_middleware(
 
 router = APIRouter()
 app.include_router(quiz.router)
+app.include_router(quiz_crud.router)
 app.include_router(user.router)
