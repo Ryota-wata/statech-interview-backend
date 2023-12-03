@@ -7,6 +7,7 @@ class QuestionOrm(Base):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True, index=True)
+    corporate_id = Column(Integer, primary_key=True, index=True)
     text = Column(String(255))
     correct_answer = Column(String(255))
     choice = relationship("ChoiceOrm", backref="questions", cascade="delete")
