@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 from api.models.choice import ChoiceOrm
 from api.models.question import QuestionOrm
 from api.models.userAnswer import UserAnswerOrm
@@ -8,6 +9,7 @@ from api.schemas.request_model.userAnswer import UserAnswerRequestModel
 from api.schemas.response_model.choice import ChoiceResponseModel
 from api.schemas.response_model.question import QuestionResponseModel
 from api.db import get_db
+import logging
 
 
 router = APIRouter()
@@ -29,8 +31,34 @@ async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
     stmt = select(QuestionOrm).where(QuestionOrm.id == question_id)
     result = await db.execute(stmt)
     question = result.scalars().one_or_none()
-    return question
 
+    logging.warning("クイズ%s", question)
+
+    if question == None:
+        return HTTPException(status_code=404, detail="質問が見つかりませんでした")
+
+    # 質問に対する選択肢を取得
+    stmt_choices = select(ChoiceOrm).where(ChoiceOrm.question_id == question.id)
+    result_choices = await db.execute(stmt_choices)
+    choices_orm = result_choices.scalars().all()
+
+    logging.warning("選択肢%s", choices_orm[0].text)
+    choices = []
+    for choice in choices_orm:
+        dict = {
+            "choice_id": choice.id,
+            "text": choice.text,
+        }
+        choices.append(dict)
+    logging.warning("正解%s", question.correct_answer)
+
+    # 質問の情報をレスポンスとして返す
+    return {
+        "id": question.id,
+        "text": question.text,
+        "correct_answer": question.correct_answer,
+        "choices": choices,
+    }
 
 @router.get("/questions/{question_id}/choices", response_model=list[ChoiceResponseModel])
 async def get_choices(question_id: int, db: AsyncSession = Depends(get_db)):
