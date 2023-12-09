@@ -1,66 +1,42 @@
 from sqlalchemy.orm.session import Session
 from fastapi import HTTPException
+import logging
 
 # スキーマ
 from api.schemas.response_model.question import QuestionResponseModel
-from api.schemas.response_model.choice import ChoiceResponseModel
 from api.schemas.request_model.userAnswer import UserAnswerRequestModel
 
-# use_caseメソッド
+# use_case基底クラス
 from api.use_cases.base import UseCaseBaseModel
 
-# repositoryメソッド
-from api.repository.quiz import ChoiceRepository, QuestionRepository, UserAnswerRepository
+# repositoryクラス
+from api.repository.quiz import QuestionInfoRepository, UserAnswerRepository
 
 
-
-class ConvertQuestionIdToQuestion(UseCaseBaseModel):
+class ConvertQuestionIdToQuestionInfo(UseCaseBaseModel):
     def __init__(self, session: Session):
         self.session = session
 
-    """質問ID(question_id)から質問を取得する"""
-
-    async def convert_question_id_to_question(self, question_id: int) -> QuestionResponseModel:
+    async def convert_question_id_to_question_info(self, question_id: int) -> QuestionResponseModel:
         """質問を取得
 
-          question_idを元に該当する質問を取得する
+          question_idを元に該当する質問と選択肢を取得する
 
         """
 
-        question = await QuestionRepository(session=self.session).fetch_question(question_id=question_id)
+        question_info = await QuestionInfoRepository(session=self.session).fetch_question_info(question_id=question_id)
 
-        if question is None:
-            raise HTTPException(status_code=404, detail="該当する質問が存在しません")
+        logging.warning("クイズ%s", question_info)
 
-        return question
-    
-    
-class ConvertQuestionIdToChoices(UseCaseBaseModel):
-    def __init__(self, session: Session):
-        self.session = session
+        if question_info is None:
+            raise HTTPException(status_code=404, detail="該当する質問情報が存在しません")
 
-    """質問ID(question_id)から選択肢を取得する"""
-
-    async def convert_question_id_to_choices(self, question_id: int) -> list[ChoiceResponseModel]:
-        """選択肢を取得
-
-          question_idを元に該当する選択肢を取得する
-
-        """
-
-        choices =  await ChoiceRepository(session=self.session).fetch_choices(question_id=question_id)
-
-        if choices is None:
-            raise HTTPException(status_code=404, detail="該当する選択肢が存在しません")
-
-        return choices
+        return question_info
     
 
 class UserAnswer(UseCaseBaseModel):
     def __init__(self, session: Session):
         self.session = session
-
-    """質問に対し回答し、その回答を保存する"""
 
     async def answer_question(self, users_answer: UserAnswerRequestModel):
         """質問に回答する
@@ -69,6 +45,6 @@ class UserAnswer(UseCaseBaseModel):
 
         """
 
-        answer = await UserAnswerRepository(session=self.session).save_answer(answer=users_answer)
+        answer_result = await UserAnswerRepository(session=self.session).save_answer(answer=users_answer)
 
-        return answer
+        return answer_result

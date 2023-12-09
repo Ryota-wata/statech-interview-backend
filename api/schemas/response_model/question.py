@@ -5,6 +5,7 @@ class QuestionResponseModel(BaseModel):
   text: str
   corporate_id: int
   correct_answer: str
+  choices: list
 
   class Config:
     orm_mode = True

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+import logging
 
 # モデル
 from api.models.question import QuestionOrm
@@ -9,28 +10,29 @@ from api.models.userAnswer import UserAnswerOrm
 
 # スキーマ
 from api.schemas.response_model.question import QuestionResponseModel
-from api.schemas.response_model.choice import ChoiceResponseModel
 from api.schemas.request_model.userAnswer import UserAnswerRequestModel
 
 
-class QuestionRepository:
-    """Questionテーブルへアクセス"""
+class QuestionInfoRepository:
+    """QuestionテーブルとChoiceテーブルへアクセス"""
 
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    async def fetch_question(self, question_id: int) -> QuestionResponseModel | None:
-        """質問IDから質問を取得する
+    async def fetch_question_info(self, question_id: int) -> QuestionResponseModel | None:
+        """質問IDから質問と選択肢を取得する
 
-        Questionテーブルのquestion_idとリクエストのquestion_idが完全一致した場合、そQuestionテーブルのレコードを返す
+        Questionテーブルのquestion_idとリクエストのquestion_idが完全一致した場合、そのQuestionテーブルのレコードを返す
+        Choiceテーブルのquestion_idとリクエストのquestion_idが完全一致した場合、そのChoiceテーブルのレコードを返す
 
         Args:
             question_id(int): 質問ID
         Returns:
-            QuestionResponseModel: 質問ID、質問文、正解
+            QuestionResponseModel: 質問ID、質問文、正解、選択肢（リスト）
 
         """
 
+        # 質問を取得
         question = (
             await self.session.execute(
                 select(QuestionOrm)
@@ -42,31 +44,12 @@ class QuestionRepository:
 
         if not question:
             return None
-
-        return question
-    
-class ChoiceRepository:
-    """Choiceテーブルへアクセス"""
-
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    async def fetch_choices(self, question_id: int) -> list[ChoiceResponseModel] | None:
-        """質問IDから選択肢を取得する
-
-        テーブルのquestion_idとリクエストのquestion_idが完全一致した場合、そのChoiceテーブルのレコードを返す
-
-        Args:
-            question_id(int): 質問ID
-        Returns:
-            list[ChoiceResponseModel] : list[選択肢ID、質問ID、質問文]
-
-        """
-
+        
+        # 質問に対する選択肢を取得
         choices = (
             await self.session.execute(
                 select(ChoiceOrm)
-                .where(ChoiceOrm.question_id == question_id)
+                .where(ChoiceOrm.question_id == question.id)
             )
         ).scalars().all()
 
@@ -75,8 +58,25 @@ class ChoiceRepository:
         if not choices:
             return None
 
-        return choices
+        logging.warning("選択肢%s", choices[0].text)
+        res_choices = []
+        for choice in choices:
+            dict = {
+                "choice_id": choice.id,
+                "text": choice.text,
+            }
+            res_choices.append(dict)
+        logging.warning("正解%s", question.correct_answer)
     
+        # 質問の情報をレスポンスとして返す
+        return QuestionResponseModel(
+            id=question.id, 
+            text=question.text,
+            corporate_id=question.corporate_id,
+            correct_answer=question.correct_answer,
+            choices=res_choices
+        )
+
 
 class UserAnswerRepository:
     """UserAnswerテーブルにアクセス"""
