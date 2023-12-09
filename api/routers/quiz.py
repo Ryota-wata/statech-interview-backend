@@ -1,19 +1,21 @@
-from sqlalchemy import select
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from api.models.choice import ChoiceOrm
-from api.models.question import QuestionOrm
-from api.models.userAnswer import UserAnswerOrm
+
+from api.db import get_db
+
+# スキーマ
 from api.schemas.request_model.userAnswer import UserAnswerRequestModel
 from api.schemas.response_model.choice import ChoiceResponseModel
 from api.schemas.response_model.question import QuestionResponseModel
-from api.db import get_db
+
+# use_caseメソッド
+from api.use_cases.quiz import ConvertQuestionIdToChoices, ConvertQuestionIdToQuestion, UserAnswer
 
 
 router = APIRouter()
 
 @router.get("/question/{question_id}", response_model=QuestionResponseModel)
-async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
+async def get_question(question_id: int, session: AsyncSession = Depends(get_db)):
     """質問を取得するエンドポイント
 
       【Request】
@@ -25,15 +27,14 @@ async def get_question(question_id: int, db: AsyncSession = Depends(get_db)):
         correct_answer: 正解
 
     """
+    # use_case層のメソッド呼び出し
+    question = await ConvertQuestionIdToQuestion(session=session).convert_question_id_to_question(question_id=question_id)
 
-    stmt = select(QuestionOrm).where(QuestionOrm.id == question_id)
-    result = await db.execute(stmt)
-    question = result.scalars().one_or_none()
     return question
 
 
 @router.get("/questions/{question_id}/choices", response_model=list[ChoiceResponseModel])
-async def get_choices(question_id: int, db: AsyncSession = Depends(get_db)):
+async def get_choices(question_id: int, session: AsyncSession = Depends(get_db)):
     """質問の選択肢を取得するエンドポイント
 
       【Request】
@@ -45,14 +46,14 @@ async def get_choices(question_id: int, db: AsyncSession = Depends(get_db)):
         text: 選択肢
 
     """
-    stmt = select(ChoiceOrm).where(ChoiceOrm.question_id == question_id)
-    result = await db.execute(stmt)
-    choices = result.scalars().all()
+    # use_case層のメソッド呼び出し
+    choices = await ConvertQuestionIdToChoices(session=session).convert_question_id_to_choices(question_id=question_id)
+
     return choices
 
 
 @router.post("/questions/{question_id}/answers")
-async def answer_question(answer: UserAnswerRequestModel, db: AsyncSession = Depends(get_db)):
+async def answer_question(answer: UserAnswerRequestModel, session: AsyncSession = Depends(get_db)):
     """質問を回答するエンドポイント
 
       【Request】
@@ -61,16 +62,8 @@ async def answer_question(answer: UserAnswerRequestModel, db: AsyncSession = Dep
         choice_id: 選択肢ID
 
     """
-    # ユーザーが特定の質問に対して既に回答した回数を取得
-    stmt = select(UserAnswerOrm).where(UserAnswerOrm.user_id == answer.user_id, UserAnswerOrm.question_id == answer.question_id)
-    result = await db.execute(stmt)
-    last_took_exam_num = result.scalars().all()
+    # use_case層のメソッド呼び出し
+    user_answer = await UserAnswer(session=session).answer_question(users_answer=answer)
 
-    user_answer = UserAnswerOrm(
-        user_id=answer.user_id,
-        question_id=answer.question_id,
-        choice_id=answer.choice_id,
-        took_exam_num = len(last_took_exam_num) + 1
-    )
-    db.add(user_answer)
-    await db.commit()
+    return user_answer
+
