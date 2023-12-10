@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from api.db import Base
-from api.models.user import UserOrm
 
 class UserAnswerOrm(Base):
     __tablename__ = "user_answers"

@@ -1,9 +1,16 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
 from api.routers.admin import quiz_crud
 from api.routers import quiz, user
 
+load_dotenv()
+
 app = FastAPI()
+
+api_base_url = os.getenv("API_PRODUCTION_URL", default="http://localhost:8000")
 
 app.add_middleware(
     CORSMiddleware,
