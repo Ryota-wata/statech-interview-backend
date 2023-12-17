@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 from api.routers.admin import quiz_crud
-from api.routers import quiz, user
+from api.routers import quiz, user, result
 
 load_dotenv()
 
@@ -24,3 +24,4 @@ router = APIRouter()
 app.include_router(quiz.router)
 app.include_router(quiz_crud.router)
 app.include_router(user.router)
+app.include_router(result.router)

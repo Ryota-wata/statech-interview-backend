@@ -2,8 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from api.models.choice import ChoiceOrm
 from api.models.user import UserOrm
+from api.models.corporate import CorporateOrm
 from api.models.question import QuestionOrm
 from api.models.userAnswer import UserAnswerOrm
+from api.models.quiz_result import QuizResultOrm
 
 DB_URL = "mysql+pymysql://root@db:3306/statech?charset=utf8"
 engine = create_engine(DB_URL, echo=True)
@@ -15,6 +17,9 @@ def reset_database():
     UserOrm.metadata.drop_all(bind=engine)
     UserOrm.metadata.create_all(bind=engine)
 
+    CorporateOrm.metadata.drop_all(bind=engine)
+    CorporateOrm.metadata.create_all(bind=engine)
+
     QuestionOrm.metadata.drop_all(bind=engine)
     QuestionOrm.metadata.create_all(bind=engine)
 
@@ -24,7 +29,12 @@ def reset_database():
     UserAnswerOrm.metadata.drop_all(bind=engine)
     UserAnswerOrm.metadata.create_all(bind=engine)
 
+    QuizResultOrm.metadata.drop_all(bind=engine)
+    QuizResultOrm.metadata.create_all(bind=engine)
+
     #初期データ投入
+    corporate = CorporateOrm(id=1, name="走る技術")
+
     question1 = QuestionOrm(id=1, corporate_id=1, text="「エンジニア転職チャンネル」を知っていますか？", correct_answer="いつも楽しみに見てます！")
     choice1_1 = ChoiceOrm(id=1, text="いつも楽しみに見てます！", question_id=1)
     choice1_2 = ChoiceOrm(id=2, text="なんですかそれ？", question_id=1)
@@ -46,7 +56,8 @@ def reset_database():
     choice5_2 = ChoiceOrm(id=10, text="仕事だと思ってます", question_id=5)
 
     # データベースに追加
-    session.add_all([question1, choice1_1, choice1_2,
+    session.add_all([corporate,
+                    question1, choice1_1, choice1_2,
                     question2, choice2_1, choice2_2,
                     question3, choice3_1, choice3_2,
                     question4, choice4_1, choice4_2,
