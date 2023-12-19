@@ -2,8 +2,6 @@ import logging
 import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
 
 # モデル
 from api.models.user import UserOrm

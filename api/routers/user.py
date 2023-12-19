@@ -2,7 +2,6 @@ import logging
 from sqlalchemy import select
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from api.models.user import UserOrm
 from api.schemas.response_model.user import UserResponseModel
 from api.db import get_db
 
