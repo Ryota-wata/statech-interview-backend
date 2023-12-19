@@ -1,64 +1,40 @@
-import os
 import logging
-import firebase_admin
-from dotenv import load_dotenv
-from sqlalchemy import select,insert
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from firebase_admin import auth, credentials
-from api.models.user import UserOrm
-from api.models.question import QuestionOrm
-from api.models.quiz_result import QuizResultOrm
-from api.schemas.response_model.user import UserResponseModel
 from api.db import get_db
+
+# use_caseクラス
+from api.use_cases.user import Login
+from api.use_cases.quiz import ConvertQuestionIdToQuestionInfo
+from api.use_cases.result import CrudReslut
 
 
 router = APIRouter()
 
 #TODO 返り値の型指定
 @router.post("/result")
-async def login_user(request: Request, db: AsyncSession = Depends(get_db)):
-    # リクエストから質問IDと合否を取得
+async def login_user(request: Request, session: AsyncSession = Depends(get_db)):
+    # リクエストからトークン、質問ID、合否情報を取得
+    auth_token = request.headers.get("Authorization")
     data = await request.json()
     question_id = data.get("question_id")
     quiz_result = data.get("result")
 
-    #TODO リファクタ必須です
-    # Firebase Admin SDKによりIDトークンを確認
-    authorization = request.headers.get("Authorization")
-    if authorization is None:
+    # 認証ユーザー情報取得
+    if auth_token is None:
         logging.error(f"認証トークンが存在しません: {e}")
         raise HTTPException(status_code=401, detail="Unauthorized")
-
-    token = authorization.split(" ")[-1].strip()
-    try:
-        claims = auth.verify_id_token(token)
-    except Exception as e:
-        return "合否は保存しない"
     
-    email = claims["email"]
-    stmt = select(UserOrm).where(UserOrm.email == email)
-    result = await db.execute(stmt)
-    user = result.scalars().one_or_none()
+    # ユーザーid を取得
+    user = await Login(session=session).login(auth_token=auth_token)
+    user_id = user.id
 
-    # 質問の corporate_id を取得
-    stmt_question = (
-        select(QuestionOrm.corporate_id)
-        .where(QuestionOrm.id == question_id)
-    )
-    result_question = await db.execute(stmt_question)
-    corporate_id = result_question.scalar()
+    # 質問の会社を取得
+    question_info = await ConvertQuestionIdToQuestionInfo(session=session).convert_question_id_to_question_info(question_id=question_id)
+    corporate_id = question_info.corporate_id
 
-    # QuizResultOrm にデータを挿入
-    quiz_result_data = {
-        "user_id": user.id,
-        "corporate_id": corporate_id,
-        "passed": quiz_result,
-    }
-
-    stmt_insert = insert(QuizResultOrm).values(quiz_result_data)
-    await db.execute(stmt_insert)
-    await db.commit()
+    # クイズの結果 を保存
+    await CrudReslut(session=session).register_reslut(user_id=user_id, corporate_id=corporate_id, quiz_result=quiz_result)
 
     return "処理完了"
 
