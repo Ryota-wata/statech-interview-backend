@@ -6,7 +6,7 @@ from api.db import Base
 class QuestionOrm(Base):
     __tablename__ = "questions"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     corporate_id = Column(Integer, primary_key=True, index=True)
     text = Column(String(255))
     correct_answer = Column(String(255))
