@@ -2,18 +2,21 @@ import logging
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.db import get_db
+from typing import List
 
 # use_caseクラス
 from api.use_cases.user import Login
 from api.use_cases.quiz import ConvertQuestionIdToQuestionInfo
 from api.use_cases.result import CrudReslut
 
+# スキーマ
+from api.schemas.response_model.result import ResultResponseModel
+
 
 router = APIRouter()
 
-#TODO 返り値の型指定
 @router.post("/result")
-async def login_user(request: Request, session: AsyncSession = Depends(get_db)):
+async def register_result(request: Request, session: AsyncSession = Depends(get_db)):
     # リクエストからトークン、質問ID、合否情報を取得
     auth_token = request.headers.get("Authorization")
     data = await request.json()
@@ -38,3 +41,24 @@ async def login_user(request: Request, session: AsyncSession = Depends(get_db)):
 
     return "処理完了"
 
+@router.get("/result")
+async def get_result(request: Request, session: AsyncSession = Depends(get_db)) -> List[ResultResponseModel] | None:
+    # リクエストからトークン、質問ID、合否情報を取得
+    auth_token = request.headers.get("Authorization")
+
+    # 認証ユーザー情報取得
+    if auth_token is None:
+        logging.error(f"認証トークンが存在しません: {e}")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # ユーザーid を取得
+    user = await Login(session=session).login(auth_token=auth_token)
+    user_id = user.id
+
+    # クイズの結果を受験日降順で取得
+    result = await CrudReslut(session=session).get_reslut(user_id=user_id)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="結果が存在しません")
+
+    return result
